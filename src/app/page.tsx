@@ -1,103 +1,159 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { databaseService } from '../lib/database';
+import AuthSection from '../components/AuthSection';
+import DashboardSection from '../components/DashboardSection';
+import TradingJournalSection from '../components/TradingJournalSection';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { TradingJournal } from '../lib/supabase';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+export default function TradingPlatform() {
+  const { user, loading, signOut } = useAuth();
+  const [currentView, setCurrentView] = useState<'auth' | 'dashboard' | 'trading'>('auth');
+  const [userJournals, setUserJournals] = useState<TradingJournal[]>([]);
+  const [currentJournal, setCurrentJournal] = useState<TradingJournal | null>(null);
+
+  // Load user journals when user is authenticated
+  useEffect(() => {
+    if (user) {
+      setCurrentView('dashboard');
+      loadUserJournals();
+    } else {
+      setCurrentView('auth');
+      setUserJournals([]);
+      setCurrentJournal(null);
+    }
+  }, [user]);
+
+  const loadUserJournals = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await databaseService.getTradingJournals(user.id);
+      if (error) {
+        console.error('Error loading journals:', error);
+      } else {
+        setUserJournals(data || []);
+      }
+    } catch (error) {
+      console.error('Error loading journals:', error);
+    }
+  };
+
+  const handleLogin = () => {
+    // This will be handled by the AuthContext
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+  };
+
+  const handleCreateJournal = async (journal: Omit<TradingJournal, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await databaseService.createTradingJournal({
+        ...journal,
+        user_id: user.id,
+        starting_capital: 0,
+        week_data: {}
+      });
+      
+      if (error) {
+        console.error('Error creating journal:', error);
+        return;
+      }
+      
+      if (data) {
+        setUserJournals(prev => [data, ...prev]);
+        setCurrentJournal(data);
+        setCurrentView('trading');
+      }
+    } catch (error) {
+      console.error('Error creating journal:', error);
+    }
+  };
+
+  const handleOpenJournal = (journal: TradingJournal) => {
+    setCurrentJournal(journal);
+    setCurrentView('trading');
+  };
+
+  const handleDeleteJournal = async (journalId: string) => {
+    try {
+      const { error } = await databaseService.deleteTradingJournal(journalId);
+      
+      if (error) {
+        console.error('Error deleting journal:', error);
+        return;
+      }
+      
+      setUserJournals(prev => prev.filter(j => j.id !== journalId));
+    } catch (error) {
+      console.error('Error deleting journal:', error);
+    }
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+    setCurrentJournal(null);
+  };
+
+  const handleUpdateJournal = async (updatedJournal: TradingJournal) => {
+    try {
+      const { data, error } = await databaseService.updateTradingJournal(updatedJournal.id, {
+        starting_capital: updatedJournal.starting_capital,
+        week_data: updatedJournal.week_data
+      });
+      
+      if (error) {
+        console.error('Error updating journal:', error);
+        return;
+      }
+      
+      if (data) {
+        setUserJournals(prev => prev.map(j => j.id === data.id ? data : j));
+        setCurrentJournal(data);
+      }
+    } catch (error) {
+      console.error('Error updating journal:', error);
+    }
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return <AuthSection onLogin={handleLogin} />;
+  }
+
+  if (currentView === 'dashboard') {
+    return (
+      <DashboardSection
+        user={{ email: user.email!, name: user.user_metadata?.name || user.email!.split('@')[0] }}
+        journals={userJournals}
+        onLogout={handleLogout}
+        onCreateJournal={handleCreateJournal}
+        onOpenJournal={handleOpenJournal}
+        onDeleteJournal={handleDeleteJournal}
+      />
+    );
+  }
+
+  if (currentView === 'trading' && currentJournal) {
+    return (
+      <TradingJournalSection
+        user={{ email: user.email!, name: user.user_metadata?.name || user.email!.split('@')[0] }}
+        journal={currentJournal}
+        onLogout={handleLogout}
+        onBackToDashboard={handleBackToDashboard}
+        onUpdateJournal={handleUpdateJournal}
+      />
+    );
+  }
+
+  return <AuthSection onLogin={handleLogin} />;
 }
