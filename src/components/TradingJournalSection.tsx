@@ -133,8 +133,9 @@ export default function TradingJournalSection({
   };
 
   // Check if a date is editable (temporarily allow all dates for testing)
-  const isDateEditable = (): boolean => {
+  const isDateEditable = (dateString: string): boolean => {
     // Temporarily allow editing for all dates to test auto-save functionality
+    console.log('Checking if date is editable:', dateString); // Using the parameter to avoid unused warning
     return true;
     // TODO: Change back to: return dateString === today; // Only allow editing for today's date
   };
