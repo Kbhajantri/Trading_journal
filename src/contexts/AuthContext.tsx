@@ -1,102 +1,88 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { createBrowserClient } from '@supabase/ssr';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const supabaseClient = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      setSession(session);
+    // Check active sessions and sets the user
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
-    };
-
-    getInitialSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
+    });
 
     return () => subscription.unsubscribe();
-  }, [supabaseClient]);
-
-  const signUp = async (email: string, password: string, name: string) => {
-    const { error } = await supabaseClient.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: name,
-        },
-      },
-    });
-    return { error };
-  };
+  }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return { error: error?.message || null };
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const signUp = async (email: string, password: string, name: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+      return { error: error?.message || null };
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
   };
 
   const signOut = async () => {
-    await supabaseClient.auth.signOut();
+    await supabase.auth.signOut();
   };
 
   const resetPassword = async (email: string) => {
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
-    return { error };
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      });
+      return { error: error?.message || null };
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
   };
 
   const value = {
     user,
-    session,
     loading,
-    signUp,
     signIn,
+    signUp,
     signOut,
     resetPassword,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

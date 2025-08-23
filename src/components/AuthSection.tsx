@@ -72,7 +72,7 @@ export default function AuthSection({ onLogin }: AuthSectionProps) {
       const { error } = await signIn(loginData.email, loginData.password);
       
       if (error) {
-        setError('loginEmail', error.message);
+        setError('loginEmail', error);
       } else {
         onLogin();
       }
@@ -127,7 +127,7 @@ export default function AuthSection({ onLogin }: AuthSectionProps) {
       const { error } = await signUp(signupData.email, signupData.password, signupData.name);
       
       if (error) {
-        setError('signupEmail', error.message);
+        setError('signupEmail', error);
       } else {
         // Show success message for email confirmation
         alert('Please check your email to confirm your account before signing in.');
@@ -155,7 +155,7 @@ export default function AuthSection({ onLogin }: AuthSectionProps) {
     const { error } = await resetPassword(resetData.email);
     
     if (error) {
-      setError('resetEmail', error.message);
+      setError('resetEmail', error);
     } else {
       alert('Reset link sent! Check your email.');
       setShowForgotPassword(false);
@@ -190,7 +190,7 @@ export default function AuthSection({ onLogin }: AuthSectionProps) {
           <h1 className="text-2xl font-bold text-white mb-2">
             {mode === 'login' ? 'Welcome Back' : 'Create Account'}
           </h1>
-          <p className="text-slate-400">
+          <p className="text-base text-slate-400">
             {mode === 'login' ? 'Sign in to your trading account' : 'Sign up for a new trading account'}
           </p>
         </div>
@@ -317,7 +317,7 @@ export default function AuthSection({ onLogin }: AuthSectionProps) {
 
             {/* Switch to Signup */}
             <p className="text-center text-slate-400">
-              Don't have an account? 
+              Don&apos;t have an account? 
               <button 
                 type="button" 
                 className="text-blue-400 hover:text-blue-300 transition-colors font-medium ml-1"
@@ -519,7 +519,7 @@ export default function AuthSection({ onLogin }: AuthSectionProps) {
 
             {/* Reset Form */}
             <form onSubmit={handleResetPassword} className="space-y-6">
-              <p className="text-slate-300 text-sm">Enter your email address and we'll send you a link to reset your password.</p>
+              <p className="text-slate-300 text-sm">Enter your email address and we&apos;ll send you a link to reset your password.</p>
               
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

@@ -25,12 +25,17 @@ interface TradingJournal {
   updated_at: string;
 }
 
+interface TradingJournalWithEmail extends TradingJournal {
+  user_email: string;
+  user_name: string;
+}
+
 interface DashboardSectionProps {
   user: User;
-  journals: TradingJournal[];
+  journals: TradingJournalWithEmail[];
   onLogout: () => void;
   onCreateJournal: (journal: Omit<TradingJournal, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
-  onOpenJournal: (journal: TradingJournal) => void;
+  onOpenJournal: (journal: TradingJournalWithEmail) => void;
   onDeleteJournal: (journalId: string) => void;
 }
 
@@ -150,22 +155,25 @@ export default function DashboardSection({
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">Trading Dashboard</h1>
-              <p className="text-slate-400">Welcome back, {user.name}</p>
+              <p className="text-base text-slate-400">Welcome back, {user.name}</p>
+              <p className="text-sm text-slate-500">Email: {user.email}</p>
             </div>
           </div>
-          <button 
-            onClick={onLogout}
-            className="glass-light rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
-          >
-            <i className="fas fa-sign-out-alt mr-2"></i>Logout
-          </button>
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={onLogout}
+              className="glass-light rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+            >
+              <i className="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+          </div>
         </div>
 
         {/* Create New Journal Section */}
         <div className="glass rounded-2xl p-8 mb-8">
           <div className="text-center mb-6">
             <h2 className="text-3xl font-bold text-white mb-2">Create New Trading Journal</h2>
-            <p className="text-slate-400">Start tracking your trades from a specific date (30-day journal)</p>
+            <p className="text-base text-slate-400">Start tracking your trades from a specific date (30-day journal)</p>
           </div>
           
           <div className="max-w-md mx-auto">
@@ -176,11 +184,11 @@ export default function DashboardSection({
                   type="date"
                   value={startDate}
                   onChange={handleDateChange}
-                  className="input-field w-full px-4 py-3 rounded-xl text-white"
+                  className="input-field w-full px-4 py-3 rounded-xl text-white text-base"
                   min={new Date().toISOString().split('T')[0]} // Can't select past dates
                 />
                 <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                  <i className="fas fa-calendar text-slate-400"></i>
+                  <i className="fas fa-calendar text-slate-400 text-base"></i>
                 </div>
               </div>
               <p className="text-xs text-slate-400 mt-1">
@@ -190,7 +198,7 @@ export default function DashboardSection({
             
             <button 
               onClick={handleCreateJournal}
-              className="btn-primary w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center"
+              className="btn-primary w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center text-base"
             >
               <i className="fas fa-plus mr-2"></i>
               Create 30-Day Journal
@@ -221,8 +229,8 @@ export default function DashboardSection({
                   return b.month - a.month;
                 })
                 .map(journal => {
-                  const createdDate = new Date(journal.createdAt).toLocaleDateString();
-                  const startDateFormatted = formatStartDate(journal.startDate);
+                  const createdDate = new Date(journal.created_at).toLocaleDateString();
+                  const startDateFormatted = formatStartDate(journal.start_date);
                   const daysInMonth = getDaysInMonth(journal.month, journal.year);
                   const totalDays = daysInMonth.length;
                   
@@ -241,8 +249,9 @@ export default function DashboardSection({
                             <h3 className="text-lg font-semibold text-white">
                               {getMonthName(journal.month)} {journal.year}
                             </h3>
-                            <p className="text-sm text-slate-400">
-                              Starts {startDateFormatted} • Created {createdDate} • 30-day journal
+
+                            <p className="text-xs text-slate-500">
+                              Owner: {journal.user_email}
                             </p>
                           </div>
                         </div>
@@ -250,7 +259,7 @@ export default function DashboardSection({
                           <div className="text-right">
                             <div className="text-sm text-slate-400">Starting Capital</div>
                             <div className="text-lg font-semibold text-green-400">
-                               ₹{journal.startingCapital || 0}
+                               ₹{journal.starting_capital || 0}
                             </div>
                           </div>
                           <div className="flex space-x-2">

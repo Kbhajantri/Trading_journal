@@ -31,3 +31,9 @@ export interface TradingJournal {
   created_at: string
   updated_at: string
 }
+
+// Extended interface that includes user email
+export interface TradingJournalWithEmail extends TradingJournal {
+  user_email: string
+  user_name: string
+}

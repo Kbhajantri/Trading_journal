@@ -1,10 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "../contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: "Professional Trading Platform",
   description: "A comprehensive trading journal platform for tracking your trades and analyzing performance",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
