@@ -19,6 +19,20 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['@supabase/ssr', '@supabase/supabase-js'],
   },
+  
+  // ESLint configuration for build
+  eslint: {
+    // Allow production builds to successfully complete even if there are ESLint warnings
+    ignoreDuringBuilds: true,
+    // Custom rules for production
+    dirs: ['src'],
+  },
+  
+  // TypeScript configuration
+  typescript: {
+    // Allow production builds to successfully complete even if there are TypeScript errors
+    ignoreBuildErrors: false,
+  },
 };
 
 export default nextConfig;

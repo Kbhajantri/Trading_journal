@@ -49,7 +49,7 @@ export default function TradingJournalSection({
   const [weekData, setWeekData] = useState(journal.week_data || {});
   const [startingCapital, setStartingCapital] = useState(journal.starting_capital || 0);
   const [monthDays, setMonthDays] = useState<{ [key: string]: string[] }>({});
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // const [currentDate, setCurrentDate] = useState(new Date());
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -133,7 +133,7 @@ export default function TradingJournalSection({
   };
 
   // Check if a date is editable (temporarily allow all dates for testing)
-  const isDateEditable = (dateString: string): boolean => {
+  const isDateEditable = (): boolean => {
     // Temporarily allow editing for all dates to test auto-save functionality
     return true;
     // TODO: Change back to: return dateString === today; // Only allow editing for today's date

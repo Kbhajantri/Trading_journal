@@ -132,11 +132,8 @@ export const databaseService = {
       console.log('✅ User authenticated:', user.id);
       
       // Filter out fields that don't exist in the trading_journals table
-      const {
-        user_email,
-        user_name,
-        ...validUpdates
-      } = updates as any;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { user_email, user_name, ...validUpdates } = updates as Record<string, any>;
       
       console.log('🔧 Filtered updates for database:', validUpdates);
       
